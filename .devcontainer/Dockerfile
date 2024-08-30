@@ -44,21 +44,21 @@ RUN curl -L https://github.com/cpuguy83/go-md2man/archive/refs/tags/v2.0.4.tar.g
 # Build Podman 5.2.2
 RUN git clone --depth 1 --branch v5.2.2 https://github.com/containers/podman.git && \
     cd podman && \
-    make BUILDTAGS="seccomp exclude_graphdriver_btrfs" && \
+    make BUILDTAGS="seccomp exclude_graphdriver_btrfs" -j$(nproc) && \
     make install PREFIX=/usr && \
     cd .. && \
     rm -rf podman
 
 # Build conmon
-RUN git clone --depth 1 https://github.com/containers/conmon.git && \
+RUN git clone --depth 1 --branch v2.1.12 https://github.com/containers/conmon.git && \
     cd conmon && \
-    make && \
+    make -j$(nproc) && \
     make install && \
     cd .. && \
     rm -rf conmon
 
 # Install CNI plugins
-RUN git clone --depth 1 https://github.com/containernetworking/plugins.git && \
+RUN git clone --depth 1 --branch v1.5.1 https://github.com/containernetworking/plugins.git && \
     cd plugins && \
     ./build_linux.sh && \
     mkdir -p /opt/cni/bin && \
@@ -69,24 +69,27 @@ RUN git clone --depth 1 https://github.com/containernetworking/plugins.git && \
 # Install runc
 RUN git clone --depth 1 --branch v1.1.13 https://github.com/opencontainers/runc.git && \
     cd runc && \
-    make BUILDTAGS="seccomp" && \
+    make BUILDTAGS="seccomp" -j$(nproc) && \
     make install && \
     cd .. && \
     rm -rf runc
 
 # Final stage
-FROM registry.access.redhat.com/ubi9/ubi:9.4-1181.1724035907
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1194
 
 # Copy built binaries and libraries from builder stage
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/bin/podman /usr/bin/
 COPY --from=builder /usr/lib/libpodman.so* /usr/lib/
 COPY --from=builder /opt/cni /opt/cni
+COPY --from=builder /usr/lib64/libseccomp.so* /usr/lib64/
 
-# Set up Podman configuration
-RUN useradd podman && \
+# Set up Podman configuration and install necessary packages
+RUN microdnf install -y shadow-utils ncurses && \
+    useradd podman && \
     echo "podman:100000:65536" >> /etc/subuid && \
-    echo "podman:100000:65536" >> /etc/subgid
+    echo "podman:100000:65536" >> /etc/subgid && \
+    microdnf clean all
 
 USER podman
 RUN mkdir -p /home/podman/.config/containers && \

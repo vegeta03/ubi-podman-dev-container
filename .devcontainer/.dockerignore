@@ -1,0 +1,12 @@
+.git
+.gitignore
+*.md
+*.log
+*.tmp
+*.temp
+*.o
+*.a
+*.so
+.DS_Store
+Dockerfile
+.dockerignore
