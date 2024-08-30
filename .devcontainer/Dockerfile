@@ -7,7 +7,7 @@ ARG UID_MAX=165535
 
 # Install dependencies and Podman
 RUN dnf -y update && \
-    dnf -y install 'dnf-command(copr)' && \
+    dnf -y install dnf-plugins-core && \
     dnf -y copr enable rhcontainerbot/podman-next && \
     dnf -y install \
     podman-${PODMAN_VERSION} \
