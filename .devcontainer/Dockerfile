@@ -1,16 +1,10 @@
 # Dockerfile for installing Podman on UBI 8
 FROM registry.access.redhat.com/ubi8/ubi:8.7 AS builder
 
-ARG PODMAN_VERSION=5.2.2
-ARG UID_MIN=100000
-ARG UID_MAX=165535
-
 # Install dependencies and Podman
 RUN dnf -y update && \
-    dnf -y install dnf-plugins-core && \
-    dnf -y copr enable rhcontainerbot/podman-next && \
     dnf -y install \
-    podman-${PODMAN_VERSION} \
+    podman \
     fuse-overlayfs \
     container-selinux \
     iptables \
@@ -22,9 +16,11 @@ RUN dnf -y update && \
 RUN echo 'kernel.unprivileged_userns_clone=1' >> /etc/sysctl.conf && \
     echo 'user.max_user_namespaces=28633' >> /etc/sysctl.conf && \
     useradd -m podman && \
-    echo "podman:${UID_MIN}:$((UID_MAX-UID_MIN+1))" >> /etc/subuid && \
-    echo "podman:${UID_MIN}:$((UID_MAX-UID_MIN+1))" >> /etc/subgid && \
-    mkdir -p /home/podman/.config/containers && \
+    echo "podman:100000:65536" >> /etc/subuid && \
+    echo "podman:100000:65536" >> /etc/subgid
+
+# Set up storage for rootless Podman
+RUN mkdir -p /home/podman/.config/containers && \
     cat <<EOF > /home/podman/.config/containers/storage.conf
 [storage]
 driver = "overlay"

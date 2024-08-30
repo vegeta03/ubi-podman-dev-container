@@ -1,12 +1,7 @@
 {
     "name": "UBI 8 Podman Development Container",
     "build": {
-        "dockerfile": "Dockerfile",
-        "args": {
-            "PODMAN_VERSION": "5.2.2",
-            "UID_MIN": "100000",
-            "UID_MAX": "165535"
-        }
+        "dockerfile": "Dockerfile"
     },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {}
