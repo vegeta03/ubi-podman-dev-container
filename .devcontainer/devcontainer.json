@@ -1,0 +1,48 @@
+{
+    "name": "UBI 8 Podman Development Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "PODMAN_VERSION": "5.2.2",
+            "UID_MIN": "100000",
+            "UID_MAX": "165535"
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {}
+    },
+    "remoteUser": "podman",
+    "runArgs": [
+        "--privileged",
+        "--security-opt",
+        "seccomp=unconfined",
+        "--security-opt",
+        "apparmor=unconfined"
+    ],
+    "overrideCommand": false,
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/podman/.ssh,type=bind,consistency=cached"
+    ],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "editor.formatOnSave": true,
+                "files.trimTrailingWhitespace": true
+            },
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "redhat.vscode-yaml",
+                "timonwong.shellcheck",
+                "foxundermoon.shell-format"
+            ]
+        }
+    },
+    "remoteEnv": {
+        "PODMAN_USERNS": "keep-id",
+        "CONTAINERS_CONF": "/home/podman/.config/containers/containers.conf",
+        "REGISTRY_AUTH_FILE": "/home/podman/.config/containers/auth.json"
+    },
+    "postCreateCommand": "sudo chown podman:podman /home/podman/.ssh && chmod 700 /home/podman/.ssh && chmod 600 /home/podman/.ssh/*",
+    "postStartCommand": "podman system info"
+}
